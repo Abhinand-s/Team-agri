@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:tflite/tflite.dart';
 import 'package:image_picker/image_picker.dart'; // For testing with images
+import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
+import 'package:tflite_flutter/tflite_flutter.dart'; // TFLite interpreter for Firebase model
 
 class QualityDetectionPage extends StatefulWidget {
   @override
@@ -12,7 +12,8 @@ class QualityDetectionPage extends StatefulWidget {
 class _QualityDetectionPageState extends State<QualityDetectionPage> {
   String _output = 'No result yet'; // Initial output text
   XFile? _image; // Updated type
-  bool _busy = false; // To handle loading state
+// To handle loading state
+  Interpreter? _interpreter;
 
   @override
   void initState() {
@@ -20,21 +21,25 @@ class _QualityDetectionPageState extends State<QualityDetectionPage> {
     loadModel();
   }
 
-  // Load the TFLite model
+  // Load the Firebase custom model
   Future<void> loadModel() async {
     setState(() {
-      _busy = true;
     });
     try {
-      String? res = await Tflite.loadModel(
-        model: "assets/fruit_vegetable_quality_detector.tflite",
-      );
-      print('Model loaded: $res');
+      // Download the custom model from Firebase
+      FirebaseCustomModel model = await FirebaseModelDownloader.instance
+          .getModel("veg-detect", FirebaseModelDownloadType.localModelUpdateInBackground);
+
+      // Load the model into the TFLite interpreter
+      _interpreter = Interpreter.fromFile(File(model.file.path));
+      print('Model loaded from Firebase: ${model.file.path}');
     } catch (e) {
       print('Error loading model: $e');
+      setState(() {
+        _output = 'Error loading model';
+      });
     } finally {
       setState(() {
-        _busy = false;
       });
     }
   }
@@ -42,23 +47,30 @@ class _QualityDetectionPageState extends State<QualityDetectionPage> {
   // Run inference on the image
   Future<void> runModelOnImage(XFile image) async {
     try {
-      var recognitions = await Tflite.runModelOnImage(
-        path: image.path, // path to the image file
-        imageMean: 0.0,
-        imageStd: 255.0,
-        numResults: 1, // Top prediction result
-        threshold: 0.5, // Confidence threshold
-      );
-
-      if (recognitions != null && recognitions.isNotEmpty) {
+      if (_interpreter == null) {
         setState(() {
-          _output = 'Quality: ${recognitions[0]['label']}'; // Display label
+          _output = 'Model not loaded';
         });
-      } else {
-        setState(() {
-          _output = 'Could not detect quality';
-        });
+        return;
       }
+
+      // Simulate model inference for now
+      await Future.delayed(Duration(seconds: 2));
+
+      // Replace with actual inference results
+      List<String> categories = [
+        'Single Overmature',
+        'Single Mature',
+        'Multiple Overmature',
+        'Multiple Mature',
+      ];
+
+      // Simulate random category selection for demonstration purposes
+      String simulatedResult = categories[(categories.length * (DateTime.now().millisecondsSinceEpoch % 100) / 100).toInt()];
+
+      setState(() {
+        _output = 'Quality: $simulatedResult'; // Update to reflect actual model output
+      });
     } catch (e) {
       print('Error during inference: $e');
       setState(() {
@@ -83,7 +95,7 @@ class _QualityDetectionPageState extends State<QualityDetectionPage> {
 
   @override
   void dispose() {
-    Tflite.close(); // Dispose of the model when done
+    _interpreter?.close(); // Dispose of the interpreter when done
     super.dispose();
   }
 
@@ -91,46 +103,112 @@ class _QualityDetectionPageState extends State<QualityDetectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Real-Time Quality Detection'),
+        title: Text(
+          'Real-Time Quality Detection',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.green[800],
+        elevation: 0,
       ),
-      body: Center(
-        child: Stack(
-          children: <Widget>[
-            if (_image != null) 
-              Positioned.fill(
-                child: Image.file(
-                  File(_image!.path),
-                  fit: BoxFit.cover,
-                ),
+      body: Stack(
+        children: <Widget>[
+          // Gradient background with agri-themed colors
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade700, Colors.green.shade400],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-            if (_busy)
-              Center(
-                child: CircularProgressIndicator(),
-              ),
-            Center(
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  SizedBox(height: 20),
-                  Text(
-                    _output,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                  // Image Display Box
+                  if (_image != null)
+                    Container(
+                      width: 300, // Fixed size for image container
+                      height: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade800, width: 2),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(_image!.path),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 300,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.green.shade100,
+                        border: Border.all(color: Colors.green.shade800, width: 2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'No image selected',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.green.shade900,
+                          ),
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
+                  SizedBox(height: 30),
+                  Card(
+                    elevation: 4,
+                    color: Colors.white.withOpacity(0.9),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        _output,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[900],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 40),
                   ElevatedButton(
                     onPressed: pickImage,
-                    child: Text('Pick an Image'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white, 
+                      backgroundColor: Colors.green[800], 
+                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 5,
+                    ),
+                    child: Text(
+                      'Pick an Image',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -36,6 +36,11 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   image_picker: ^1.1.2
+  firebase_ml_model_downloader: ^0.3.1+2
+  tflite_flutter: ^0.11.0
+  firebase_core: ^3.5.0
+  google_fonts: ^6.2.1
+  syncfusion_flutter_charts: ^27.1.48
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +70,11 @@ flutter:
      - assets/background1.jpg
      - assets/background2.jpg
      - assets/fruit_vegetable_quality_detector.tflite
+     - assets/image1.jpeg
+     - assets/image2.jpeg
+     - assets/image3.avif
+     - assets/image4.jpg
+     - assets/image5.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

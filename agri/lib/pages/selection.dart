@@ -1,5 +1,6 @@
 import 'package:agri/pages/consumer.dart';
 import 'package:agri/pages/farmer.dart';
+import 'package:agri/pages/public_profile.dart';
 import 'package:flutter/material.dart';
 
 class SelectionPage extends StatelessWidget {
@@ -35,7 +36,7 @@ class SelectionPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => FarmerPage()),
+                      MaterialPageRoute(builder: (context) => const FarmerPage()),
                     );
                   },
                 ),
@@ -48,10 +49,23 @@ class SelectionPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ConsumerPage()),
+                      MaterialPageRoute(builder: (context) => const ConsumerPage()),
                     );
                   },
                 ),
+                  const SizedBox(height: 20),
+                _buildElevatedButton(
+                  context: context,
+                  label: 'Public',
+                  color: Colors.green[800]!,
+                  icon: Icons.public,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) =>  PublicProfilePage()),
+                    );
+                  },
+                )
               ],
             ),
           ),

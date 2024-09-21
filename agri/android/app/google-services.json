@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1047083002367",
+    "project_id": "team-agri",
+    "storage_bucket": "team-agri.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1047083002367:android:e6e5058ebf1cab0f749fca",
+        "android_client_info": {
+          "package_name": "com.example.agri"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3BKxB-H5NMV9kgKgabevYEuTv8OO6vfI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
